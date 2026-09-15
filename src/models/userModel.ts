@@ -1,29 +1,16 @@
 import pool from "../config/db.js";
-import { RowDataPacket, ResultSetHeader } from "mysql2";
 
-export interface User extends RowDataPacket {
-  id: number;
-  username: string;
-  email: string;
-  password: string;
-}
+export const UserModel = {
+  findByUsername: async (username: string) => {
+    const [rows]: any = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+    return rows[0];
+  },
 
-export const findUserByEmail = async (email: string): Promise<User | null> => {
-  const [rows] = await pool.query<User[]>(
-    "SELECT * FROM users WHERE email = ? LIMIT 1",
-    [email]
-  );
-  return rows.length > 0 ? rows[0] : null;
-};
-
-export const createUser = async (
-  username: string,
-  email: string,
-  hashedPassword: string
-): Promise<number> => {
-  const [result] = await pool.query<ResultSetHeader>(
-    "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-    [username, email, hashedPassword]
-  );
-  return result.insertId;
+  create: async (username: string, email: string, hanshedPassword: string) => {
+    const [result]: any = await pool.query(
+      'INSERT INTO users (username, email, password) VALUES (?,?,?)',
+      [username, email, hanshedPassword]
+    );
+    return result.insertId;
+  }
 };

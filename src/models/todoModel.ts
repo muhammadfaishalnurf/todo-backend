@@ -1,29 +1,48 @@
 import pool from "../config/db.js";
-import { RowDataPacket, ResultSetHeader } from "mysql2";
 
-export interface Todo extends RowDataPacket {
-  id: number;
-  user_id: number;
-  task: string;
-  is_done: boolean;
-  created_at: string;
-}
+export const TodoModel = {
+  getByUserId: async (userId: number) => {
+    const [rows]: any = await pool.query(
+      "SELECT * FROM todos WHERE user_id = ?",
+      [userId],
+    );
+    return rows; // Kembalikan array semua todo milik user ini
+  },
 
-export const getTodosByUserId = async (userId: number): Promise<Todo[]> => {
-  const [rows] = await pool.query<Todo[]>(
-    "SELECT * FROM todos WHERE user_id = ? ORDER BY created_at DESC",
-    [userId]
-  );
-  return rows;
-};
+  getById: async (id: number, userId: number) => {
+    const [rows]: any = await pool.query(
+      "SELECT * FROM todos WHERE id = ? AND user_id = ?",
+      [id, userId],
+    );
+    return rows[0]; // Kembalikan 1 data, atau undefined jika tidak ditemukan
+  },
 
-export const createTodo = async (
-  userId: number,
-  task: string
-): Promise<number> => {
-  const [result] = await pool.query<ResultSetHeader>(
-    "INSERT INTO todos (user_id, task) VALUES (?, ?)",
-    [userId, task]
-  );
-  return result.insertId;
+  create: async (userId: number, task: string) => {
+    const [result]: any = await pool.query(
+      "INSERT INTO todos (user_id, task) VALUES (?, ?)",
+      [userId, task],
+    );
+    return result.insertId;
+  },
+
+  update: async (
+    id: number,
+    task: string,
+    isCompleted: boolean,
+    userId: number,
+  ) => {
+    const [result]: any = await pool.query(
+      "UPDATE todos SET task = ?, is_completed = ? WHERE id = ? AND user_id = ?",
+      [task, isCompleted, id, userId],
+    );
+    return result.affectedRows;
+  },
+
+  delete: async (id: number, userId: number) => {
+    const [result]: any = await pool.query(
+      "DELETE FROM todos WHERE id = ? AND user_id = ?",
+      [id, userId],
+    );
+    return result.affectedRows;
+  },
 };

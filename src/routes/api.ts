@@ -1,21 +1,17 @@
-import { Router } from "express";
-import { register, login } from "../controllers/authController.js";
-import { getTodos, addTodo } from "../controllers/todoController.js";
-import { authMiddleware } from "../middlewares/authMiddleware.js";
-import {
-  validateRegister,
-  validateLogin,
-  validateTodo,
-} from "../middlewares/validator.js";
+import { Router } from 'express';
+import { register, login } from '../controllers/authController';
+import { getTodos, createTodo } from '../controllers/todoController';
+import { validateRegister, validateLogin, validateTodo } from '../middlewares/validator';
+import { verifyToken } from '../middlewares/authMiddleware';
 
 const router = Router();
 
-// Auth routes
-router.post("/auth/register", validateRegister, register);
-router.post("/auth/login", validateLogin, login);
+// AUTHENTICATION ROUTES
+router.post('/auth/register', validateRegister, register);
+router.post('/auth/login', validateLogin, login);
 
-// Todo routes (dilindungi authMiddleware)
-router.get("/todos", authMiddleware, getTodos);
-router.post("/todos", authMiddleware, validateTodo, addTodo);
+// TODO ROUTES (Protected)
+router.get('/todos', verifyToken, getTodos);
+router.post('/todos', verifyToken, validateTodo, createTodo);
 
 export default router;

@@ -1,35 +1,23 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-dotenv.config();
 
-interface JwtPayload {
-  userId: number;
-}
 
-export const authMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const authHeader = req.headers.authorization;
+export const verifyToken = (req: Request, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Token tidak ditemukan" });
-  }
+    if (!token) {
+        res.status(401).json({ success: false, message: 'Akses ditolak. Token tidak ditemukan!' });
+        return;
+    }
 
-  const token = authHeader.split(" ")[1];
-
-  try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string
-    ) as JwtPayload;
-
-    res.locals.userId = decoded.userId;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Token tidak valid atau kadaluarsa" });
-  }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: number };
+        res.locals.userId = decoded.id;
+        next();
+    } catch (error) {
+        res.status(403).json({ success: false, message: 'Sesi tidak valid atau kedaluwarsa!' });
+    }
 };
